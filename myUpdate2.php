@@ -4,7 +4,7 @@ $link = mysqli_connect("localhost", "root", "") or die(mysqli_connect_error());
 
 //Select the database.
 mysqli_select_db($link, "latihan") or die(mysqli_error($link));
-	
+	sfsdfhffghhhf
 	$pNama = $_POST["nama"];
 	$pTel = $_POST["telefon"];
 	$pAdd = $_POST["alamat"];
