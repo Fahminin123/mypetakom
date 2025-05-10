@@ -1,38 +1,45 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Lab 7 Question 2</title>
-    </head>
     <body>
-        <form action="Lab7_Q3_insertData2.php" method="post">
-            <hr>
-            <label>Name:</label>
-            <input type="text" name="name">
-            <br>
-            <label>Age:</label>
-            <input type="number" name="age">
-            <br>
-            <label>Gender:</label>
-            <input type="radio" name="gender" value="male">Male
-            <input type="radio" name="gender" value="female">Female
-            <br>
-            <label>Title:</label>
-            <input type="checkbox" name="title" value="prof">Prof
-            <input type="checkbox" name="title" value="Dr">Dr
-            <br>
-            <label>Hobby:</label>
-            <select name="hobby[]" multiple>
-                <option value="reading">reading</option>
-                <option value="swimming">swimming</option>
-                <option value="basketball">basketball</option>
-                <option value="football">football</option>
-            </select>
-            <br>
-            <label>Comments: </label>
-            <textarea name="comment" rows = "4" cols = "36"></textarea>
-            <br>
-            <input type="submit" value="Submit">
-        </form>
-        <hr>
+        <?php 
+        $name = $_POST["name"];
+        $age = $_POST["age"];
+        $gender = $_POST["gender"];
+        $title = $_POST["title"];
+        $hobby = is_array($_POST["hobby"]) ? implode(", ", $_POST["hobby"]) : $_POST["hobby"];
+        $comment = $_POST["comment"];
+
+        // to make a connection with database
+	$link = mysqli_connect("localhost", "root") or die(mysqli_connect_error());
+
+	// to select the targeted database
+	mysqli_select_db($link, "mydb") or die(mysqli_error());
+
+    // to create a query to be executed in sql
+	$query = "insert into User values('', '$name', '$age', '$gender', '$title', '$hobby', '$comment')"  
+    or die(mysqli_connect_error());
+
+
+    // to run sql query in database
+    $result = mysqli_query($link, $query);
+ 
+    //Check whether the insert was successful or not
+    if($result) 
+        {
+        
+            echo "<script type='text/javascript'> 
+        alert('Data inserted successfully!');
+        window.location.href = 'Lab7_Q3_display.php';
+      </script>";
+            
+}
+else 
+    {
+            
+        die("Insert failed");
+    }
+
+        ?>
     </body>
 </html>
+
