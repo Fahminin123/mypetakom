@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Lab 7 Question 3</title>
+        <title>Attendance Slot</title>
     </head>
     <body>
-        <form action="Lab7_Q2_actionSQL.php" method="post">
+        <form action="module3_insertData.php" method="post">
             <hr>
-            <label>Name:</label>
+            <label>StudentID</label>
             <input type="text" name="name">
             <br>
             <label>Age:</label>
