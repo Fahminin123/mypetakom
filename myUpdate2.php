@@ -1,7 +1,7 @@
 <?php
 //Connect to the database server.
 $link = mysqli_connect("localhost", "root", "") or die(mysqli_connect_error());
-hhhhh
+hhhhhgfhfh
 //Select the database.
 mysqli_select_db($link, "latihan") or die(mysqli_error($link));
 	sfsdfhffghhhf
