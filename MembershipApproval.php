@@ -1,8 +1,42 @@
+<?php
+session_start();
+
+// Database connection
+$conn = new mysqli("localhost", "root", "", "mypetakom");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Restrict access to only logged-in admins
+if (!isset($_SESSION['user_id']) || $_SESSION['type_user'] !== 'coordinator') {
+    header("Location: Login.php");
+    exit();
+}
+
+// Get admin data from database
+$admin_id = $_SESSION['user_id'];
+$query = "SELECT * FROM staff WHERE StaffID = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $admin_id); // Fix applied here
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows !== 1) {
+    // Admin not found in database
+    session_destroy();
+    header("Location: Login.php");
+    exit();
+}
+
+$staff = $result->fetch_assoc();
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Event Advisor Dashboard</title>
+    <title>Membership Approval</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
         body {
             background-color: #f5f5f5;
@@ -15,7 +49,7 @@
         }
 
         .header {
-            background-color: #1f2d3d;
+            background-color:rgb(222, 116, 24); 
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -54,7 +88,7 @@
 
         .sidebar {
             width: 200px;
-            background-color: #2c3e50;
+            background-color: #d35400; 
             color: white;
             position: fixed;
             top: 120px;
@@ -103,18 +137,18 @@
         }
 
         .menuitem:hover {
-            background-color: #1a0966;
+            background-color: #a04000; /* Even darker orange */
         }
 
         .menuitem.active {
-            background-color: #1abc9c;
+            background-color: #e67e22; /* Matching header orange */
             font-weight: 500;
         }
 
         .togglebutton {
-            background-color:rgb(16, 8, 54);
+            background-color: #e67e22; /* Orange */
             color: white;
-            border: 1px solid rgba(18, 1, 63, 0.3);
+            border: 1px solid rgba(230, 126, 34, 0.3);
             padding: 8px 12px;
             border-radius: 4px;
             cursor: pointer;
@@ -125,10 +159,10 @@
         }
 
         .togglebutton:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: #d35400; /* Darker orange */
         }
 
-        .logoutbutton {
+          .logoutbutton {
             background-color: rgba(255, 0, 0, 0.2);
             color: white;
             border: 1px solid rgba(255, 0, 0, 0.3);
@@ -158,85 +192,51 @@
         }
 
         .profilebutton:hover {
-            background-color: rgba(46, 204, 113, 0.3);
+            background-color: rgba(52, 152, 219, 0.3);
         }
         
-         .maincontent {
-            margin-left: 240px;
-            margin-top: 100px;
+        .maincontent {
+            margin-left: 200px;
+            margin-top: 120px;
             padding: 40px;
             flex: 1;
             box-sizing: border-box;
+            gap: 40px;
             transition: margin-left 0.3s ease;
+            justify-content: space-between;
         }
 
         .maincontent.expanded {
             margin-left: 0;
         }
-
         .content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            
         }
 
-        .container{
-            margin: 0 15px;
+        .content h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: black;
+            font-weight: 600;
         }
 
-        .form-box{
-            width: 100%;
-            max-width: 450px;
+        .seccontent {
+            background-color: white;
             padding: 30px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
 
-        h2{
-            font-size: 34px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        input{
-            width: 100%;
-            padding: 12px;
-            background: #eee;
-            border-radius: 6px;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        .button{
-            width: 100%;
-            padding: 12px;
-            background: #7494ec;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            color: #fff;
-            font-weight: 500;
-            margin-bottom: 20px;
-            transition: 0.5s;
-        }
-
-        .button:hover{
-            background: #6884d3;
-        }
-
-
-
-        .footer
-        {
-            background-color: #1f2d3d;
+        .footer {
+            background-color: #e67e22; /* Orange */
             color: white;
+            padding: 15px 0;
         }
-
     </style>
 </head>
 <body>
@@ -246,12 +246,12 @@
                 <i class="fas fa-bars"></i>Menu 
             </button>
             <div class="Logo">    
-                <img src="Image/UMPSALogo.png" alt="LogoUMP">
-                <img src="Image/PetakomLogo.png" alt="LogoPetakom">
+                <img src="image/UMPSALogo.png" alt="LogoUMP">
+                <img src="image/PetakomLogo.png" alt="LogoPetakom">
             </div>
         </div>
         <div class="header-right">
-        <a href="EventAdvisorProfile.php" class="profilebutton">
+        <a href="AdminProfile.php" class="profilebutton">
     <i class="fas fa-user-circle"></i> My Profile
 </a>
             <a href="logout.php" class="logoutbutton" onclick="return confirm('Are you sure you want to log out?');">
@@ -261,61 +261,40 @@
     </header>
 
     <nav class="sidebar" id="sidebar">
-        <h2 class="sidebartitle">Event Advisor</h2>
+        <h2 class="sidebartitle">Admin</h2>
         <ul class="menuitems">
             <li>
-                <a href="EventAdvisorDashboard.php" class="menuitem">
+            <a href="AdminDashboard.php" class="menuitem">
                     <span>Dashboard</span>
                 </a>
+                
             </li>
+          
+            
             <li>
-                <a href="EventRegistration.php" class="menuitem">
-                    <span>Event Registration</span>
-                </a>
+            <a href="MeritApplicationApproval.php" class="menuitem">
+                <span>Merit Application Approval</span>
+    </a>
             </li>
+            
             <li>
-                <a href="EventInformation.php" class="menuitem">
-                    <span>Event Information</span>
-                </a>
+            <a href="MembershipApproval.php" class="menuitem active">
+                <span>Membership Approval</span>
+    </a>
             </li>
-            <li>
-                <a href="Event.php" class="menuitem">
-                    <span>Event</span>
-                </a>
-            </li>
-            <li>
-                <a href="MeritClaim.php" class="menuitem">
-                    <span>Merit Claim</span>
-                </a>
-            </li>
-            <li>
-                <a href="AttendanceSlot.php" class="menuitem active">
-                    <span>Event attendance Slot</span>
-                </a>
-            </li>
+            
         </ul>
     </nav>
 
     <div class="maincontent" id="maincontent">
         <div class="content">
-            <div class="container">
-                <div class="form-box" id="attendance-slot">
-                    <form action="">
-                        <h2>Attendance Slot</h2>
-                        <p>Event Name</p>
-                        <p>Gotong Royong</p>
-                        <label>Student ID:</label>
-                        <input type="text" name="studentID" required>
-                        <label>Password:</label>
-                        <input type="password" name="password" required>
-                        <button type="submit" name="submit" class="button">Submit</button>
-                    </form>
-                </div>
-            </div>        
+            <h1>Membership Approval</h1>
             
         </div>
 
-        
+        <div class="seccontent">
+          
+        </div>
     </div>
 
 
@@ -342,7 +321,7 @@
                 } else {
                     icon.classList.remove('fa-bars');
                     icon.classList.add('fa-times');
-                    toggleButton.innerHTML = '<i class="fas fa-times"></i> Menu';
+                    toggleBtn.innerHTML = '<i class="fas fa-times"></i> Menu';
                 }
             });
         });

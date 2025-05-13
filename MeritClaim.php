@@ -1,7 +1,39 @@
+<?php
+session_start();
+
+// Database connection
+$conn = new mysqli("localhost", "root", "", "mypetakom");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Restrict access to only logged-in event advisors
+if (!isset($_SESSION['user_id']) || $_SESSION['type_user'] !== 'event_advisor') {
+    header("Location: login.php");
+    exit();
+}
+
+// Get staff data from database
+$staff_id = $_SESSION['user_id'];
+$query = "SELECT * FROM staff WHERE StaffID = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $staff_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows !== 1) {
+    // Staff not found in database
+    session_destroy();
+    header("Location: login.php");
+    exit();
+}
+$staff = $result->fetch_assoc();
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Event Advisor Dashboard</title>
+    <title>Event Advisor Merit Claim</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
@@ -175,61 +207,168 @@
         }
 
         .content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            
         }
 
-        .container{
-            margin: 0 15px;
+        .content h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: black;
+            font-weight: 600;
         }
 
-        .form-box{
-            width: 100%;
-            max-width: 450px;
+        .seccontent {
+            background-color: white;
             padding: 30px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h2{
-            font-size: 34px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        input{
-            width: 100%;
-            padding: 12px;
-            background: #eee;
-            border-radius: 6px;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        .button{
-            width: 100%;
-            padding: 12px;
-            background: #7494ec;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            color: #fff;
-            font-weight: 500;
-            margin-bottom: 20px;
-            transition: 0.5s;
-        }
-
-        .button:hover{
-            background: #6884d3;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
 
 
+/* Table Styles */
+.table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.merit-claim-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.merit-claim-table th {
+    background-color: #005b96;
+    color: white;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+.merit-claim-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.merit-claim-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Status Badges */
+.status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status.pending {
+    background-color: #FFF3CD;
+    color: #856404;
+}
+
+.status.approved {
+    background-color: #D4EDDA;
+    color: #155724;
+}
+
+.status.rejected {
+    background-color: #F8D7DA;
+    color: #721C24;
+}
+
+/* Action Buttons */
+.approve-btn, .reject-btn, .view-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin: 2px;
+    transition: all 0.2s;
+}
+
+.approve-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.approve-btn:hover {
+    background-color: #218838;
+}
+
+.reject-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.reject-btn:hover {
+    background-color: #c82333;
+}
+
+.view-btn {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.view-btn:hover {
+    background-color: #138496;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .merit-claim-table {
+        display: block;
+    }
+    
+    .merit-claim-table thead, 
+    .merit-claim-table tbody, 
+    .merit-claim-table th, 
+    .merit-claim-table td, 
+    .merit-claim-table tr { 
+        display: block; 
+    }
+    
+    .merit-claim-table thead tr { 
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    
+    .merit-claim-table tr {
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+    }
+    
+    .merit-claim-table td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+    }
+    
+    .merit-claim-table td:before {
+        position: absolute;
+        top: 12px;
+        left: 15px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+    }
+    
+    .merit-claim-table td:nth-of-type(1):before { content: "Claim ID"; }
+    .merit-claim-table td:nth-of-type(2):before { content: "Student ID"; }
+    .merit-claim-table td:nth-of-type(3):before { content: "Event ID"; }
+    .merit-claim-table td:nth-of-type(4):before { content: "Date Submitted"; }
+    .merit-claim-table td:nth-of-type(5):before { content: "Status"; }
+    .merit-claim-table td:nth-of-type(6):before { content: "Proof Document"; }
+    .merit-claim-table td:nth-of-type(7):before { content: "Actions"; }
+}
 
         .footer
         {
@@ -263,8 +402,8 @@
     <nav class="sidebar" id="sidebar">
         <h2 class="sidebartitle">Event Advisor</h2>
         <ul class="menuitems">
-            <li>
-                <a href="EventAdvisorDashboard.php" class="menuitem">
+        <li>
+                <a href="EventAdvisorDashboard.php" class="menuitem ">
                     <span>Dashboard</span>
                 </a>
             </li>
@@ -284,12 +423,12 @@
                 </a>
             </li>
             <li>
-                <a href="MeritClaim.php" class="menuitem">
+                <a href="MeritClaim.php" class="menuitem active">
                     <span>Merit Claim</span>
                 </a>
             </li>
             <li>
-                <a href="AttendanceSlot.php" class="menuitem active">
+                <a href="AttendanceSlot.php" class="menuitem">
                     <span>Event attendance Slot</span>
                 </a>
             </li>
@@ -298,24 +437,45 @@
 
     <div class="maincontent" id="maincontent">
         <div class="content">
-            <div class="container">
-                <div class="form-box" id="attendance-slot">
-                    <form action="">
-                        <h2>Attendance Slot</h2>
-                        <p>Event Name</p>
-                        <p>Gotong Royong</p>
-                        <label>Student ID:</label>
-                        <input type="text" name="studentID" required>
-                        <label>Password:</label>
-                        <input type="password" name="password" required>
-                        <button type="submit" name="submit" class="button">Submit</button>
-                    </form>
-                </div>
-            </div>        
+            <h1>Merit Claim</h1>
             
         </div>
 
-        
+        <div class="seccontent">
+            <div class="seccontent">
+                <div class="table-container">
+                    <table class="merit-claim-table">
+                        <thead>
+                            <tr>
+                                <th>Claim ID</th>
+                                <th>Student ID</th>
+                                <th>Event ID</th>
+                                <th>Date Submitted</th>
+                                <th>Status</th>
+                                <th>Proof Document</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>CL001</td>
+                                <td>ST1001</td>
+                                <td>EV202</td>
+                                <td>2025-05-15</td>
+                                <td><span class="status pending">Pending</span></td>
+                                <td><button class="view-btn">View Document</button></td>
+                                <td>
+                                    <button class="approve-btn"><i class="fas fa-check"></i> Approve</button>
+                                    <button class="reject-btn"><i class="fas fa-times"></i> Reject</button>
+                                </td>
+                            </tr>
+                          
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
 

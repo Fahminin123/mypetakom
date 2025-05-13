@@ -31,6 +31,7 @@ if ($result->num_rows !== 1) {
 $staff = $result->fetch_assoc();
 ?>
 
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -209,34 +210,110 @@ $staff = $result->fetch_assoc();
         .maincontent.expanded {
             margin-left: 0;
         }
+
         .content {
             background-color: white;
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            
-        }
-
-        .content h1 {
-            font-size: 1.5rem;
-            margin: 0;
-            color: black;
-            font-weight: 600;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .seccontent {
             background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-        }
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-height: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .thirdcontent {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-height: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         .footer {
             background-color: #e67e22; /* Orange */
             color: white;
             padding: 15px 0;
         }
+        table, th, td {
+         border:1px solid black;
+        }
+        .edit-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .edit-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-edit:hover {
+            background-color: #2980b9;
+        }
+        .btn-view {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn-view:hover {
+            background-color: #27ae60;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        .btn i {
+            margin-right: 5px;
+            font-size: 12px;
+        }
+
+        .button {
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+        .button2 {background-color: #008CBA;} /* Blue */
     </style>
 </head>
 <body>
@@ -263,7 +340,7 @@ $staff = $result->fetch_assoc();
     <nav class="sidebar" id="sidebar">
         <h2 class="sidebartitle">Admin</h2>
         <ul class="menuitems">
-            <li>
+        <li>
             <a href="AdminDashboard.php" class="menuitem active">
                     <span>Dashboard</span>
                 </a>
@@ -282,7 +359,6 @@ $staff = $result->fetch_assoc();
                 <span>Membership Approval</span>
     </a>
             </li>
-            
         </ul>
     </nav>
 
@@ -293,8 +369,55 @@ $staff = $result->fetch_assoc();
         </div>
 
         <div class="seccontent">
-          
+<table style="width:100%">
+  <tr>
+    <th>Student ID</th>
+    <th>Student Name</th>
+    <th>Student Contact</th>
+    <th>Student Email</th>
+    <th>Action</th>
+  </tr>
+  
+  <tr>
+    <td>P0001</td>
+    <td>Ahmad Shahridzuan</td>
+    <td>P0001@adab.umpsa.edu.my</td>
+    <td>0146157720</td>
+    <td> <div class="action-buttons">
+                            <button class="btn btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-view"><i class="fas fa-eye"></i> View</button>
+                            <button class="btn btn-delete"><i class="fas fa-trash-alt"></i> Delete</button>
+                        </div></td>
+  </tr>
+
+  <tr>
+    <td>P0002</td>
+    <td>Nur Syafawati</td>
+    <td>P0002@adab.umpsa.edu.my</td>
+    <td>0142713321</td>
+    <td><div class="action-buttons">
+                            <button class="btn btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-view"><i class="fas fa-eye"></i> View</button>
+                            <button class="btn btn-delete"><i class="fas fa-trash-alt"></i> Delete</button>
+                        </div></td>
+  </tr>
+
+   <tr>
+    <td>P0003</td>
+    <td>Amirul Aiman</td>
+    <td>P0003@adab.umpsa.edu.my</td>
+    <td>01125627776</td>
+    <td><div class="action-buttons">
+                            <button class="btn btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-view"><i class="fas fa-eye"></i> View</button>
+                            <button class="btn btn-delete"><i class="fas fa-trash-alt"></i> Delete</button>
+                        </div></td>
+  </tr>
+</table>
         </div>
+          <div class="thirdcontent">
+            <button class="button button2">Add New Student</button>
+          </div>
     </div>
 
 

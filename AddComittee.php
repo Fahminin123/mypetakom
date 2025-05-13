@@ -1,7 +1,39 @@
+<?php
+session_start();
+
+// Database connection
+$conn = new mysqli("localhost", "root", "", "mypetakom");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Restrict access to only logged-in event advisors
+if (!isset($_SESSION['user_id']) || $_SESSION['type_user'] !== 'event_advisor') {
+    header("Location: login.php");
+    exit();
+}
+
+// Get staff data from database
+$staff_id = $_SESSION['user_id'];
+$query = "SELECT * FROM staff WHERE StaffID = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $staff_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows !== 1) {
+    // Staff not found in database
+    session_destroy();
+    header("Location: login.php");
+    exit();
+}
+$staff = $result->fetch_assoc();
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Event Advisor Dashboard</title>
+    <title>Add Comittee</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
@@ -175,58 +207,60 @@
         }
 
         .content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            
         }
 
-        .container{
-            margin: 0 15px;
+        .content h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: black;
+            font-weight: 600;
         }
 
-        .form-box{
-            width: 100%;
-            max-width: 450px;
+        .seccontent {
+            background-color: white;
             padding: 30px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
 
-        h2{
-            font-size: 34px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        input{
+        .studentlist {
             width: 100%;
-            padding: 12px;
-            background: #eee;
-            border-radius: 6px;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            margin-bottom: 20px;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
 
-        .button{
-            width: 100%;
-            padding: 12px;
-            background: #7494ec;
-            border-radius: 6px;
+        .studentlist th, .student-list td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .studentlist th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .studentlist tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .addbutton {
+            background-color: #1abc9c;
+            color: white;
             border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            color: #fff;
-            font-weight: 500;
-            margin-bottom: 20px;
-            transition: 0.5s;
-        }
-
-        .button:hover{
-            background: #6884d3;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+            
         }
 
 
@@ -263,7 +297,7 @@
     <nav class="sidebar" id="sidebar">
         <h2 class="sidebartitle">Event Advisor</h2>
         <ul class="menuitems">
-            <li>
+        <li>
                 <a href="EventAdvisorDashboard.php" class="menuitem">
                     <span>Dashboard</span>
                 </a>
@@ -279,7 +313,7 @@
                 </a>
             </li>
             <li>
-                <a href="Event.php" class="menuitem">
+                <a href="Event.php" class="menuitem active">
                     <span>Event</span>
                 </a>
             </li>
@@ -289,7 +323,7 @@
                 </a>
             </li>
             <li>
-                <a href="AttendanceSlot.php" class="menuitem active">
+                <a href="AttendanceSlot.php" class="menuitem">
                     <span>Event attendance Slot</span>
                 </a>
             </li>
@@ -298,24 +332,48 @@
 
     <div class="maincontent" id="maincontent">
         <div class="content">
-            <div class="container">
-                <div class="form-box" id="attendance-slot">
-                    <form action="">
-                        <h2>Attendance Slot</h2>
-                        <p>Event Name</p>
-                        <p>Gotong Royong</p>
-                        <label>Student ID:</label>
-                        <input type="text" name="studentID" required>
-                        <label>Password:</label>
-                        <input type="password" name="password" required>
-                        <button type="submit" name="submit" class="button">Submit</button>
-                    </form>
-                </div>
-            </div>        
+            <h1>Add Comittee</h1>
             
         </div>
 
-        
+        <div class="seccontent">
+            <table class="studentlist">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>P001</td>
+                        <td>Muhammad Amir Husaini</td>
+                        <td>Husaini@gmail.com</td>
+                        <td><button class="addbutton"><i class="fas fa-plus"></i> Add</button></td>
+                    </tr>
+                    <tr>
+                        <td>P002</td>
+                        <td>Muhammad Haziq</td>
+                        <td>MHaziq@gmail.com</td>
+                        <td><button class="addbutton"><i class="fas fa-plus"></i> Add</button></td>
+                    </tr>
+                    <tr>
+                        <td>P003</td>
+                        <td>Haziq Amir</td>
+                        <td>Amir@gmail.com</td>
+                        <td><button class="addbutton"><i class="fas fa-plus"></i> Add</button></td>
+                    </tr>
+                    <tr>
+                        <td>P004</td>
+                        <td>Amir Firdaus</td>
+                        <td>Firdaus@gmail.com</td>
+                        <td><button class="addbutton"><i class="fas fa-plus"></i> Add</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
 

@@ -1,7 +1,39 @@
+<?php
+session_start();
+
+// Database connection
+$conn = new mysqli("localhost", "root", "", "mypetakom");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Restrict access to only logged-in event advisors
+if (!isset($_SESSION['user_id']) || $_SESSION['type_user'] !== 'event_advisor') {
+    header("Location: login.php");
+    exit();
+}
+
+// Get staff data from database
+$staff_id = $_SESSION['user_id'];
+$query = "SELECT * FROM staff WHERE StaffID = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $staff_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows !== 1) {
+    // Staff not found in database
+    session_destroy();
+    header("Location: login.php");
+    exit();
+}
+$staff = $result->fetch_assoc();
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Event Advisor Dashboard</title>
+    <title>Event</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
@@ -175,61 +207,101 @@
         }
 
         .content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            
         }
 
-        .container{
-            margin: 0 15px;
+        .content h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: black;
+            font-weight: 600;
         }
 
-        .form-box{
-            width: 100%;
-            max-width: 450px;
+        .seccontent {
+            background-color: white;
             padding: 30px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
 
-        h2{
-            font-size: 34px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        input{
+        table {
             width: 100%;
-            padding: 12px;
-            background: #eee;
-            border-radius: 6px;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            margin-bottom: 20px;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
 
-        .button{
-            width: 100%;
-            padding: 12px;
-            background: #7494ec;
-            border-radius: 6px;
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .statusbadge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        }
+
+        .approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .actionbutton {
+            padding: 6px 12px;
             border: none;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            color: #fff;
+            font-size: 0.85rem;
             font-weight: 500;
-            margin-bottom: 20px;
-            transition: 0.5s;
+            transition: background-color 0.2s;
         }
 
-        .button:hover{
-            background: #6884d3;
+        .update {
+        background-color: #ffc107;
+        color: #212529;
         }
+        
 
+        .delete {
+            background-color: #dc3545;
+            color: white;
+        }
+        
 
+        .view {
+            background-color: #0d6efd;
+            color: white;
+            text-decoration: none;
+        }
+        
 
         .footer
         {
@@ -263,7 +335,7 @@
     <nav class="sidebar" id="sidebar">
         <h2 class="sidebartitle">Event Advisor</h2>
         <ul class="menuitems">
-            <li>
+        <li>
                 <a href="EventAdvisorDashboard.php" class="menuitem">
                     <span>Dashboard</span>
                 </a>
@@ -279,7 +351,7 @@
                 </a>
             </li>
             <li>
-                <a href="Event.php" class="menuitem">
+                <a href="Event.php" class="menuitem active">
                     <span>Event</span>
                 </a>
             </li>
@@ -289,7 +361,7 @@
                 </a>
             </li>
             <li>
-                <a href="AttendanceSlot.php" class="menuitem active">
+                <a href="AttendanceSlot.php" class="menuitem">
                     <span>Event attendance Slot</span>
                 </a>
             </li>
@@ -298,24 +370,34 @@
 
     <div class="maincontent" id="maincontent">
         <div class="content">
-            <div class="container">
-                <div class="form-box" id="attendance-slot">
-                    <form action="">
-                        <h2>Attendance Slot</h2>
-                        <p>Event Name</p>
-                        <p>Gotong Royong</p>
-                        <label>Student ID:</label>
-                        <input type="text" name="studentID" required>
-                        <label>Password:</label>
-                        <input type="password" name="password" required>
-                        <button type="submit" name="submit" class="button">Submit</button>
-                    </form>
-                </div>
-            </div>        
+            <h1>Event</h1>
             
         </div>
 
-        
+        <div class="seccontent">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Venue</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="event-row">
+                        <td>Bengkel WebEng</td>
+                        <td>Astaka, FK</td>
+                        <td><span class="statusbadge approved">Approved</span></td>
+                        <td>
+                            <a class="actionbutton update">Update</a>
+                            <a class="actionbutton delete">Delete</a>
+                            <a href="ViewEvent.php" class="actionbutton view">View</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
 

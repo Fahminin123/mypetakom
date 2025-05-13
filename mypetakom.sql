@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 12, 2025 at 05:19 AM
+-- Generation Time: May 13, 2025 at 02:14 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -24,23 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `admin`
---
-
-CREATE TABLE `admin` (
-  `AdminID` varchar(10) NOT NULL,
-  `AdminName` varchar(50) NOT NULL,
-  `AdminEmail` varchar(50) NOT NULL,
-  `AdminPassword` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- RELATIONSHIPS FOR TABLE `admin`:
---
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `attendance`
 --
 
@@ -51,14 +34,6 @@ CREATE TABLE `attendance` (
   `CheckInTime` time NOT NULL,
   `ActualGeolocation` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- RELATIONSHIPS FOR TABLE `attendance`:
---   `StudentID`
---       `student` -> `StudentID`
---   `SlotID`
---       `attendanceslot` -> `SlotID`
---
 
 -- --------------------------------------------------------
 
@@ -73,14 +48,6 @@ CREATE TABLE `attendanceslot` (
   `Geolocation` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- RELATIONSHIPS FOR TABLE `attendanceslot`:
---   `EventID`
---       `event` -> `EventID`
---   `QRCodeID`
---       `qrcode` -> `QRCodeID`
---
-
 -- --------------------------------------------------------
 
 --
@@ -91,10 +58,6 @@ CREATE TABLE `committeerole` (
   `CR_ID` varchar(10) NOT NULL,
   `CR_Desc` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- RELATIONSHIPS FOR TABLE `committeerole`:
---
 
 -- --------------------------------------------------------
 
@@ -113,14 +76,6 @@ CREATE TABLE `event` (
   `ApprovalLetter` blob NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- RELATIONSHIPS FOR TABLE `event`:
---   `StaffID`
---       `staff` -> `StaffID`
---   `QRCodeID`
---       `qrcode` -> `QRCodeID`
---
-
 -- --------------------------------------------------------
 
 --
@@ -134,16 +89,6 @@ CREATE TABLE `eventcommittee` (
   `StudentID` varchar(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- RELATIONSHIPS FOR TABLE `eventcommittee`:
---   `EventID`
---       `event` -> `EventID`
---   `CR_ID`
---       `committeerole` -> `CR_ID`
---   `StudentID`
---       `student` -> `StudentID`
---
-
 -- --------------------------------------------------------
 
 --
@@ -154,15 +99,9 @@ CREATE TABLE `memberapplication` (
   `MemberApplicationID` varchar(10) NOT NULL,
   `EventID` varchar(10) NOT NULL,
   `Status` varchar(50) NOT NULL,
-  `VerifiedBy` int(11) NOT NULL,
+  `VerifiedBy` varchar(10) NOT NULL,
   `VerifiedAt` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- RELATIONSHIPS FOR TABLE `memberapplication`:
---   `EventID`
---       `event` -> `EventID`
---
 
 -- --------------------------------------------------------
 
@@ -172,13 +111,9 @@ CREATE TABLE `memberapplication` (
 
 CREATE TABLE `merit` (
   `MeritID` varchar(10) NOT NULL,
-  `MeritDescription` varchar(10) NOT NULL,
+  `MeritDescription` varchar(100) NOT NULL,
   `MeritScore` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- RELATIONSHIPS FOR TABLE `merit`:
---
 
 -- --------------------------------------------------------
 
@@ -191,14 +126,6 @@ CREATE TABLE `meritapplication` (
   `StaffID` varchar(10) NOT NULL,
   `EventID` varchar(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- RELATIONSHIPS FOR TABLE `meritapplication`:
---   `EventID`
---       `event` -> `EventID`
---   `StaffID`
---       `staff` -> `StaffID`
---
 
 -- --------------------------------------------------------
 
@@ -217,20 +144,6 @@ CREATE TABLE `meritaward` (
   `DateAwarded` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- RELATIONSHIPS FOR TABLE `meritaward`:
---   `EventID`
---       `event` -> `EventID`
---   `StudentID`
---       `student` -> `StudentID`
---   `MeritID`
---       `merit` -> `MeritID`
---   `CommitteeID`
---       `eventcommittee` -> `CommitteeID`
---   `QRCodeID`
---       `qrcode` -> `QRCodeID`
---
-
 -- --------------------------------------------------------
 
 --
@@ -247,16 +160,6 @@ CREATE TABLE `meritclaim` (
   `MeritClaimStatus` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- RELATIONSHIPS FOR TABLE `meritclaim`:
---   `StaffID`
---       `staff` -> `StaffID`
---   `StudentID`
---       `student` -> `StudentID`
---   `EventID`
---       `event` -> `EventID`
---
-
 -- --------------------------------------------------------
 
 --
@@ -268,12 +171,6 @@ CREATE TABLE `qrcode` (
   `EventID` varchar(10) NOT NULL,
   `Image_URL` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- RELATIONSHIPS FOR TABLE `qrcode`:
---   `EventID`
---       `event` -> `EventID`
---
 
 -- --------------------------------------------------------
 
@@ -291,8 +188,12 @@ CREATE TABLE `staff` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- RELATIONSHIPS FOR TABLE `staff`:
+-- Dumping data for table `staff`
 --
+
+INSERT INTO `staff` (`StaffID`, `StaffName`, `StaffContact`, `StaffEmail`, `StaffPassword`, `Position`) VALUES
+('E100', 'Rafeeq Haiqal', 197658901, 'rafeeq123@gmail.com', 'rafeeq123', 'EventAdvisor'),
+('P100', 'Alia Maisarah', 142406712, 'alia123@gmail.com', 'alia123', 'PetakomCoordinator');
 
 -- --------------------------------------------------------
 
@@ -309,18 +210,15 @@ CREATE TABLE `student` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- RELATIONSHIPS FOR TABLE `student`:
+-- Dumping data for table `student`
 --
+
+INSERT INTO `student` (`StudentID`, `StudentName`, `StudentContact`, `StudentEmail`, `StudentPassword`) VALUES
+('S100', 'SHAHRIZUAN BIN MOHD RAZALI', 117648432, 'shahrixuan@gmail.com', 'shah123');
 
 --
 -- Indexes for dumped tables
 --
-
---
--- Indexes for table `admin`
---
-ALTER TABLE `admin`
-  ADD PRIMARY KEY (`AdminID`);
 
 --
 -- Indexes for table `attendance`
@@ -424,13 +322,6 @@ ALTER TABLE `student`
 --
 -- Constraints for dumped tables
 --
-
---
--- Constraints for table `attendance`
---
-ALTER TABLE `attendance`
-  ADD CONSTRAINT `attendance_ibfk_1` FOREIGN KEY (`StudentID`) REFERENCES `student` (`StudentID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `attendance_ibfk_2` FOREIGN KEY (`SlotID`) REFERENCES `attendanceslot` (`SlotID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `attendanceslot`

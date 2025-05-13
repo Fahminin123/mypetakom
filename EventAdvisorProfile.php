@@ -1,7 +1,39 @@
+<?php
+session_start();
+
+// Database connection
+$conn = new mysqli("localhost", "root", "", "mypetakom");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Restrict access to only logged-in event advisors
+if (!isset($_SESSION['user_id']) || $_SESSION['type_user'] !== 'event_advisor') {
+    header("Location: login.php");
+    exit();
+}
+
+// Get staff data from database
+$staff_id = $_SESSION['user_id'];
+$query = "SELECT * FROM staff WHERE StaffID = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $staff_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows !== 1) {
+    // Staff not found in database
+    session_destroy();
+    header("Location: login.php");
+    exit();
+}
+$staff = $result->fetch_assoc();
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Event Advisor Dashboard</title>
+    <title>Event Advisor Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
@@ -161,7 +193,7 @@
             background-color: rgba(46, 204, 113, 0.3);
         }
         
-         .maincontent {
+        .maincontent {
             margin-left: 240px;
             margin-top: 100px;
             padding: 40px;
@@ -175,66 +207,36 @@
         }
 
         .content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            
         }
 
-        .container{
-            margin: 0 15px;
+        .content h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: black;
+            font-weight: 600;
         }
 
-        .form-box{
-            width: 100%;
-            max-width: 450px;
+        .seccontent {
+            background-color: white;
             padding: 30px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
-
-        h2{
-            font-size: 34px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        input{
-            width: 100%;
-            padding: 12px;
-            background: #eee;
-            border-radius: 6px;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        .button{
-            width: 100%;
-            padding: 12px;
-            background: #7494ec;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            color: #fff;
-            font-weight: 500;
-            margin-bottom: 20px;
-            transition: 0.5s;
-        }
-
-        .button:hover{
-            background: #6884d3;
-        }
-
-
 
         .footer
         {
             background-color: #1f2d3d;
             color: white;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
         }
 
     </style>
@@ -246,15 +248,15 @@
                 <i class="fas fa-bars"></i>Menu 
             </button>
             <div class="Logo">    
-                <img src="Image/UMPSALogo.png" alt="LogoUMP">
-                <img src="Image/PetakomLogo.png" alt="LogoPetakom">
+                <img src="image/UMPSALogo.png" alt="LogoUMP">
+                <img src="image/PetakomLogo.png" alt="LogoPetakom">
             </div>
         </div>
         <div class="header-right">
         <a href="EventAdvisorProfile.php" class="profilebutton">
     <i class="fas fa-user-circle"></i> My Profile
 </a>
-            <a href="logout.php" class="logoutbutton" onclick="return confirm('Are you sure you want to log out?');">
+<a href="logout.php" class="logoutbutton" onclick="return confirm('Are you sure you want to log out?');">
   <i class="fas fa-sign-out-alt"></i> Logout
 </a>
         </div>
@@ -263,7 +265,7 @@
     <nav class="sidebar" id="sidebar">
         <h2 class="sidebartitle">Event Advisor</h2>
         <ul class="menuitems">
-            <li>
+        <li>
                 <a href="EventAdvisorDashboard.php" class="menuitem">
                     <span>Dashboard</span>
                 </a>
@@ -289,33 +291,42 @@
                 </a>
             </li>
             <li>
-                <a href="AttendanceSlot.php" class="menuitem active">
+                <a href="AttendanceSlot.php" class="menuitem">
                     <span>Event attendance Slot</span>
                 </a>
             </li>
+            
         </ul>
     </nav>
 
     <div class="maincontent" id="maincontent">
         <div class="content">
-            <div class="container">
-                <div class="form-box" id="attendance-slot">
-                    <form action="">
-                        <h2>Attendance Slot</h2>
-                        <p>Event Name</p>
-                        <p>Gotong Royong</p>
-                        <label>Student ID:</label>
-                        <input type="text" name="studentID" required>
-                        <label>Password:</label>
-                        <input type="password" name="password" required>
-                        <button type="submit" name="submit" class="button">Submit</button>
-                    </form>
-                </div>
-            </div>        
+            <h1>My Profile</h1>
             
         </div>
 
-        
+        <div class="seccontent">
+        <div class="info-row">
+            <div class="info-label">Name: </div>
+            <div id="name"> Amira Nasuha Binti Muhammad Amir</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">Student ID: </div>
+            <div id="name"> CA24010</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">Email: </div>
+            <div id="name"> CA24010@adab.umpsa.edu.my</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">Phone Number: </div>
+            <div id="name"> 0129003587</div><button type="edit">Edit</button>
+        </div>
+
+        </div>
     </div>
 
 
@@ -342,7 +353,7 @@
                 } else {
                     icon.classList.remove('fa-bars');
                     icon.classList.add('fa-times');
-                    toggleButton.innerHTML = '<i class="fas fa-times"></i> Menu';
+                    toggleBtn.innerHTML = '<i class="fas fa-times"></i> Menu';
                 }
             });
         });

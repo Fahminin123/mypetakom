@@ -33,7 +33,7 @@ $staff = $result->fetch_assoc();
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Event Advisor Dashboard</title>
+    <title>View Event</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
@@ -193,7 +193,7 @@ $staff = $result->fetch_assoc();
             background-color: rgba(46, 204, 113, 0.3);
         }
         
-         .maincontent {
+        .maincontent {
             margin-left: 240px;
             margin-top: 100px;
             padding: 40px;
@@ -229,6 +229,156 @@ $staff = $result->fetch_assoc();
             box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
 
+        .eventview {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .event {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .sectionlabel {
+            width: 200px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .sectioncontent {
+            flex: 1;
+            color: #555;
+        }
+        
+        .statusbadge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .meritapplication {
+            padding: 15px 0;
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .meritapplicationbutton {
+            padding: 8px 15px;
+            background-color: #1abc9c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .committeetable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .committeetable th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .committeetable td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        
+        .committeetable tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .committeetable tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .roledropdown {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            background-color: white;
+        }
+        
+        .action {
+            display: flex;
+            gap: 8px;
+        }
+
+        .addcommitteerow {
+            display: flex;
+            justify-content: flex-end;
+            padding: 15px 0;
+            margin-top: 10px;
+        }
+
+        .addcommitteebutton {
+            padding: 8px 15px;
+            background-color: #1f2d3d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+            text-decoration: none;
+        }
+
 
 
         .footer
@@ -254,7 +404,7 @@ $staff = $result->fetch_assoc();
         <a href="EventAdvisorProfile.php" class="profilebutton">
     <i class="fas fa-user-circle"></i> My Profile
 </a>
-<a href="logout.php" class="logoutbutton" onclick="return confirm('Are you sure you want to log out?');">
+            <a href="logout.php" class="logoutbutton" onclick="return confirm('Are you sure you want to log out?');">
   <i class="fas fa-sign-out-alt"></i> Logout
 </a>
         </div>
@@ -263,8 +413,8 @@ $staff = $result->fetch_assoc();
     <nav class="sidebar" id="sidebar">
         <h2 class="sidebartitle">Event Advisor</h2>
         <ul class="menuitems">
-        <li>
-                <a href="EventAdvisorDashboard.php" class="menuitem active">
+            <li>
+                <a href="EventAdvisorDashboard.php" class="menuitem">
                     <span>Dashboard</span>
                 </a>
             </li>
@@ -279,7 +429,7 @@ $staff = $result->fetch_assoc();
                 </a>
             </li>
             <li>
-                <a href="Event.php" class="menuitem">
+                <a href="Event.php" class="menuitem active">
                     <span>Event</span>
                 </a>
             </li>
@@ -298,12 +448,95 @@ $staff = $result->fetch_assoc();
 
     <div class="maincontent" id="maincontent">
         <div class="content">
-            <h1>Welcome to MyPetakom</h1>
+            <h1>View Event</h1>
             
         </div>
 
         <div class="seccontent">
-            
+            <div class="eventview">
+
+                <div class="eventsection">
+                    <div class="sectionlabel">Event Title</div>
+                    <div class="sectioncontent">Bengkel WebEng</div>
+                </div>
+
+                <div class="eventsection">
+                    <div class="sectionlabel">Event Venue</div>
+                    <div class="sectioncontent">Astaka, FK</div>
+                </div>
+
+                <div class="eventsection">
+                    <div class="sectionlabel">Event Date and Time</div>
+                    <div class="sectioncontent">22/12/2025 10:00:00</div>
+                </div>
+
+                <div class="eventsection">
+                    <div class="sectionlabel">Status</div>
+                    <div class="sectioncontent">
+                        <span class="statusbadge approved">Approved</span>
+                    </div>
+                </div>
+
+                <div class="meritapplication">
+                    <button class="meritapplicationbutton">
+                        Apply Merit Application
+                    </button>
+                </div>
+            </div>
+
+            <table class="committeetable">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Committee Role</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ahmad bin Ali</td>
+                    <td>
+                        <select class="roledropdown">
+                            <option value="President" selected>President</option>
+                            <option value="treasurer">Treasurer</option>
+                            <option value="secretary">Secretary</option>
+                        </select>
+                    </td>
+                    <td class="action">
+                        <button>
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                        <button>
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>Siti binti Mohd</td>
+                    <td>
+                        <select class="roledropdown">
+                            <option value="President" selected>President</option>
+                            <option value="treasurer">Treasurer</option>
+                            <option value="secretary">Secretary</option>
+                        </select>
+                    </td>
+                    <td class="action">
+                        <button class="editbutton">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                        <button class="deletebutton">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+            <div class="addcommitteerow">
+                <a href="AddComittee.php" class="addcommitteebutton ">Add Comittee</a>  
+            </div>
+
         </div>
     </div>
 
