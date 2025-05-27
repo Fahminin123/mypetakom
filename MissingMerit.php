@@ -310,7 +310,7 @@ if ($merit_result->num_rows > 0) {
             background-color: #f9f6ff;
         }
         .claim-btn, .update-btn, .delete-btn {
-            background-color: #5e3c99;
+            background-color: #388e3c;
             color: white;
             border: none;
             padding: 8px 15px;
