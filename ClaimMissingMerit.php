@@ -372,7 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </a>
             </li>
             <li>
-                <a href="ClaimMissingMerit.php" class="menuitem active">
+                <a href="StudEvent.php" class="menuitem">
                     <span>Event</span>
                 </a>
             </li>
@@ -387,7 +387,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </a>
             </li>
             <li>
-                <a href="MissingMerit.php" class="menuitem">
+                <a href="MissingMerit.php" class="menuitem active">
                     <span>Missing Merit</span>
                 </a>
             </li>
