@@ -445,7 +445,7 @@ if ($merit_result->num_rows > 0) {
                             <td><?= htmlspecialchars($event['EventVenue']) ?></td>
                             <td>
                                 <a href="ClaimMissingMerit.php?event_id=<?= urlencode($event['EventID']) ?>" class="claim-btn">
-                                    <i class="fas fa-paper-plane"></i> Claim Merit
+                                     Claim Merit
                                 </a>
                             </td>
                         </tr>
