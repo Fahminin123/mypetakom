@@ -28,8 +28,36 @@ if ($result->num_rows !== 1) {
     exit();
 }
 $staff = $result->fetch_assoc();
-?>
 
+// Handle AJAX request for event rows
+if (isset($_GET['action']) && $_GET['action'] === 'fetch_events') {
+
+    $query = "SELECT * FROM event WHERE StaffID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $staff_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $statusClass = strtolower($row["EventStatus"]);
+            echo "<tr>
+                    <td>" . htmlspecialchars($row["EventTitle"]) . "</td>
+                    <td>" . htmlspecialchars($row["EventVenue"]) . "</td>
+                    <td><span >" . htmlspecialchars($row["EventStatus"]) . "</span></td>
+                    <td>
+                        <button class='qrbutton' data-eventid='" . htmlspecialchars($row["EventID"]) . "'>
+                            <i class='fas fa-qrcode'></i> QR Code
+                        </button>
+                    </td>
+                  </tr>";
+        }
+    } else {
+        echo "<tr><td colspan='4' style='text-align: center;'>No events found.</td></tr>";
+    }
+    exit(); // Stop executing rest of the file for AJAX
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -130,8 +158,8 @@ $staff = $result->fetch_assoc();
         }
 
         .menuitems a {
-        text-decoration: none;
-        color: inherit;
+            text-decoration: none;
+            color: inherit;
         }
 
         .menuitem:hover {
@@ -239,6 +267,7 @@ $staff = $result->fetch_assoc();
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            vertical-align: middle;
         }
 
         th {
@@ -249,31 +278,6 @@ $staff = $result->fetch_assoc();
 
         tr:hover {
             background-color: #f5f5f5;
-        }
-
-        .status {
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            text-align: center;
-            display: inline-block;
-            min-width: 80px;
-        }
-
-        .status-pending {
-            background-color: #FFF3CD;
-            color: #856404;
-        }
-
-        .status-approved {
-            background-color: #D4EDDA;
-            color: #155724;
-        }
-
-        .status-rejected {
-            background-color: #F8D7DA;
-            color: #721C24;
         }
 
         .qrbutton {
@@ -374,36 +378,20 @@ $staff = $result->fetch_assoc();
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <?php if ($result->num_rows > 0): ?>
-                        <?php while($row = $result->fetch_assoc()): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row["EventTitle"]) ?></td>
-                            <td><?= htmlspecialchars($row["EventVenue"]) ?></td>
-                            <td>
-                                <span class="status status-<?= strtolower($row["EventStatus"]) ?>">
-                                    <?= htmlspecialchars($row["EventStatus"]) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <button class="qrbutton">
-                                    <i class="fas fa-qrcode"></i> QR Code
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="4" style="text-align: center;">No events found.</td>
-                        </tr>
-                    <?php endif; ?>
+                <tbody id="event-table-body">
+                    <tr><td colspan="4" style="text-align:center;"></td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-
-    
+    <!-- QR Code Modal (added for QR code support) -->
+    <div id="qrModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:#fff; padding:30px 30px 20px 30px; border-radius:8px; min-width:300px; text-align:center; position:relative;">
+            <button id="closeModal" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:22px; cursor:pointer;">&times;</button>
+            <div id="qrContent"><!-- QR code will be loaded here --></div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -412,12 +400,8 @@ $staff = $result->fetch_assoc();
             const mainContent = document.getElementById('maincontent');
             
             toggleButton.addEventListener('click', function() {
-
                 sidebar.classList.toggle('collapsed');
-
                 mainContent.classList.toggle('expanded');
-                
-
                 const icon = toggleButton.querySelector('i');
                 if (sidebar.classList.contains('collapsed')) {
                     icon.classList.remove('fa-times');
@@ -429,13 +413,52 @@ $staff = $result->fetch_assoc();
                     toggleButton.innerHTML = '<i class="fas fa-times"></i> Menu';
                 }
             });
+
+            // Load event table rows via AJAX
+            fetch("EventInformation.php?action=fetch_events")
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("event-table-body").innerHTML = data;
+                })
+                .catch(error => {
+                    console.error("Error loading events:", error);
+                    document.getElementById("event-table-body").innerHTML =
+                        "<tr><td colspan='4' style='text-align:center;'>Error loading events.</td></tr>";
+                });
+
+            // QR Code Modal logic
+            document.getElementById("event-table-body").addEventListener("click", function(e) {
+                if(e.target.closest('.qrbutton')) {
+                    var btn = e.target.closest('.qrbutton');
+                    var eventId = btn.getAttribute('data-eventid');
+                    // Open modal
+                    document.getElementById('qrModal').style.display = 'flex';
+                    document.getElementById('qrContent').innerHTML = 'Loading QR code...';
+                    // AJAX to get QR
+                    fetch('EventQRCode.php?eventid=' + encodeURIComponent(eventId))
+                        .then(res => res.text())
+                        .then(html => {
+                            document.getElementById('qrContent').innerHTML = html;
+                        })
+                        .catch(() => {
+                            document.getElementById('qrContent').innerHTML = '<span style="color:red;">Failed to load QR code.</span>';
+                        });
+                }
+            });
+            // Close modal
+            document.getElementById('closeModal').onclick = function() {
+                document.getElementById('qrModal').style.display = 'none';
+            };
+            document.getElementById('qrModal').onclick = function(e) {
+                if (e.target === this) this.style.display = 'none';
+            };
         });
     </script>
 
     <div class="footer">
-            <footer>
-                <center><p>&copy; 2025 MyPetakom</p></center>
-            </footer>
-        </div>
+        <footer>
+            <center><p>&copy; 2025 MyPetakom</p></center>
+        </footer>
+    </div>
 </body>
 </html>
