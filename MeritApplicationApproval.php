@@ -29,6 +29,14 @@ if ($result->num_rows !== 1) {
 }
 
 $staff = $result->fetch_assoc();
+
+// Fetch all merit applications that are pending
+$merit_query = "SELECT ma.MeritApplicationID, ma.EventID, ma.MeritApplicationStatus, e.EventTitle, e.EventDateandTime, e.EventVenue
+                FROM meritapplication ma
+                JOIN event e ON ma.EventID = e.EventID
+                WHERE ma.MeritApplicationStatus = 'Pending'";
+$merit_result = $conn->query($merit_query);
+
 ?>
 
 <!DOCTYPE html>
@@ -162,7 +170,7 @@ $staff = $result->fetch_assoc();
             background-color: #d35400; /* Darker orange */
         }
 
-          .logoutbutton {
+        .logoutbutton {
             background-color: rgba(255, 0, 0, 0.2);
             color: white;
             border: 1px solid rgba(255, 0, 0, 0.3);
@@ -232,6 +240,80 @@ $staff = $result->fetch_assoc();
             box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
 
+        /* Structured merit table style */
+        .merit-table-container {
+            width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.07);
+            padding: 24px 0 0 0;
+        }
+        .merit-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+        }
+        .merit-table th, .merit-table td {
+            padding: 14px 12px;
+            text-align: left;
+        }
+        .merit-table th {
+            background-color: #faf3ea;
+            font-weight: 600;
+            color: #c96a14;
+            border-bottom: 2px solid #f5e1c6;
+        }
+        .merit-table td {
+            border-bottom: 1px solid #f5e1c6;
+            vertical-align: middle;
+        }
+        .merit-table tr:last-child td {
+            border-bottom: none;
+        }
+        .merit-table tr:hover {
+            background-color: #fffaee;
+        }
+        
+        .merit-action-btn {
+            background: #e67e22;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            border: none;
+            font-size: 0.99rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: background 0.2s;
+        }
+        .merit-action-btn:hover {
+            background: #d35400;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            color: #343a40;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #6c757d;
+        }
+
         .footer {
             background-color: #e67e22; /* Orange */
             color: white;
@@ -293,12 +375,41 @@ $staff = $result->fetch_assoc();
         </div>
 
         <div class="seccontent">
-          
+            <div class="merit-table-container">
+            <?php if ($merit_result->num_rows > 0): ?>
+                <table class="merit-table">
+                    <thead>
+                        <tr>
+                            <th>Event Title</th>
+                            <th>Venue</th>
+                            <th>Date & Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php while ($row = $merit_result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['EventTitle']) ?></td>
+                            <td><?= htmlspecialchars($row['EventVenue']) ?></td>
+                            <td><?= date('j F Y, g:i A', strtotime($row['EventDateandTime'])) ?></td>
+                            <td>
+                                <a href="ViewMeritApplication.php?merit_id=<?= urlencode($row['MeritApplicationID']) ?>" class="merit-action-btn">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <div class="empty-state">
+                    <h3>No Pending Applications</h3>
+                    <p>There are currently no merit applications awaiting review.</p>
+                </div>
+            <?php endif; ?>
+            </div>
         </div>
     </div>
-
-
-    
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -307,12 +418,8 @@ $staff = $result->fetch_assoc();
             const mainContent = document.getElementById('maincontent');
             
             toggleButton.addEventListener('click', function() {
-
                 sidebar.classList.toggle('collapsed');
-
                 mainContent.classList.toggle('expanded');
-                
-
                 const icon = toggleButton.querySelector('i');
                 if (sidebar.classList.contains('collapsed')) {
                     icon.classList.remove('fa-times');
@@ -321,16 +428,16 @@ $staff = $result->fetch_assoc();
                 } else {
                     icon.classList.remove('fa-bars');
                     icon.classList.add('fa-times');
-                    toggleBtn.innerHTML = '<i class="fas fa-times"></i> Menu';
+                    toggleButton.innerHTML = '<i class="fas fa-times"></i> Menu';
                 }
             });
         });
     </script>
 
     <div class="footer">
-            <footer>
-                <center><p>&copy; 2025 MyPetakom</p></center>
-            </footer>
-        </div>
+        <footer>
+            <center><p>&copy; 2025 MyPetakom</p></center>
+        </footer>
+    </div>
 </body>
 </html>
