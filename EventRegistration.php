@@ -22,19 +22,23 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows !== 1) {
-    // Staff not found in database
     session_destroy();
     header("Location: login.php");
     exit();
 }
 $staff = $result->fetch_assoc();
+
+
 ?>
+
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Event Advisor Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body {
             background-color: #f5f5f5;
@@ -285,6 +289,21 @@ $staff = $result->fetch_assoc();
             color: white;
         }
 
+        .geo-coords 
+        { 
+            margin-top: 5px; 
+            font-size: 0.95rem; 
+            color: #888;
+        }
+        
+        #map 
+        { 
+            height: 250px; 
+            width: 100%; 
+            margin-top: 8px; 
+            border-radius:6px; 
+        }
+
     </style>
 </head>
 <body>
@@ -351,25 +370,44 @@ $staff = $result->fetch_assoc();
 
         <div class="seccontent">
             <div class="formcontainer">
-                <form>
+                <form action="EventRegistrationAction.php" method="post" enctype="multipart/form-data">
                     <div class="formgroup">
                         <label class="formlabel">Event Title</label>
-                        <input type="text" class="forminput" id="title" name="title">
+                        <input type="text" class="forminput" id="title" name="title" required>
                     </div>
 
                     <div class="formgroup">
                         <label class="formlabel">Event Venue</label>
-                        <input type="text" class="forminput" id="venue" name="venue" >
+                        <input type="text" class="forminput" id="venue" name="venue" required>
+                    </div>
+
+                    <div class="formgroup">
+                        <label class="formlabel">Event Level</label>
+                        <select class="forminput" id="eventlevel" name="eventlevel" required>
+                            <option value="">-- Select Level --</option>
+                            <option value="International">International</option>
+                            <option value="National">National</option>
+                            <option value="State">State</option>
+                            <option value="District">District</option>
+                            <option value="UMPSA">UMPSA</option>
+                        </select>
+                    </div>
+
+                    <div class="formgroup">
+                        <label class="formlabel">Event Geolocation (select on map)</label>
+                        <div id="map"></div>
+                        <span class="geo-coords" id="geoCoords"></span>
+                        <input type="hidden" id="geolocation" name="geolocation">
                     </div>
 
                     <div class="formgroup">
                         <label class="formlabel">Event Date and Time</label>
-                        <input type="datetime-local" class="forminput" id="datetime" name="dateandtime">
+                        <input type="datetime-local" class="forminput" id="datetime" name="dateandtime" required>
                     </div>
 
                     <div class="formgroup">
                         <label class="formlabel">Approval Letter</label>
-                        <input type="file" class="forminput " id="approval" name="approval" accept=".pdf,.doc,.docx">
+                        <input type="file" class="forminput" id="approval" name="approval" accept=".pdf" required>
                     </div>
 
                     <div class="submit-container">
@@ -382,9 +420,9 @@ $staff = $result->fetch_assoc();
         </div>
     </div>
 
-
     
 
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const toggleButton = document.getElementById('togglebutton');
@@ -392,12 +430,8 @@ $staff = $result->fetch_assoc();
             const mainContent = document.getElementById('maincontent');
             
             toggleButton.addEventListener('click', function() {
-
                 sidebar.classList.toggle('collapsed');
-
                 mainContent.classList.toggle('expanded');
-                
-
                 const icon = toggleButton.querySelector('i');
                 if (sidebar.classList.contains('collapsed')) {
                     icon.classList.remove('fa-times');
@@ -409,6 +443,33 @@ $staff = $result->fetch_assoc();
                     toggleButton.innerHTML = '<i class="fas fa-times"></i> Menu';
                 }
             });
+
+            // Leaflet Map Initialization
+            var map = L.map('map').setView([3.5438, 103.4281], 13); // Default: UMPSA Pekan
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            var marker;
+
+            function setCoords(lat, lng) {
+                document.getElementById('geolocation').value = lat + ',' + lng;
+                document.getElementById('geoCoords').textContent = "Lat: " + lat.toFixed(6) + ", Lon: " + lng.toFixed(6);
+            }
+
+            map.on('click', function(e) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+                if (marker) {
+                    marker.setLatLng(e.latlng);
+                } else {
+                    marker = L.marker(e.latlng).addTo(map);
+                }
+                setCoords(lat, lng);
+            });
+
+            
+            
         });
     </script>
 
