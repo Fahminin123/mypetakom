@@ -30,7 +30,6 @@ if ($result->num_rows !== 1) {
 $staff = $result->fetch_assoc();
 
 // Handle delete action
-// Handle delete action
 if (isset($_GET['delete'])) {
     $eventID = $_GET['delete'];
     
@@ -111,7 +110,7 @@ if (isset($_GET['delete'])) {
 }
 
 // Fetch all events for this advisor
-$eventsQuery = "SELECT * FROM event WHERE StaffID = ? ORDER BY EventDateandTime DESC";
+$eventsQuery = "SELECT * FROM event WHERE StaffID = ?";
 $stmt = $conn->prepare($eventsQuery);
 $stmt->bind_param("s", $staff_id);
 $stmt->execute();
