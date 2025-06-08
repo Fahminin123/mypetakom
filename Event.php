@@ -28,6 +28,94 @@ if ($result->num_rows !== 1) {
     exit();
 }
 $staff = $result->fetch_assoc();
+
+// Handle delete action
+// Handle delete action
+if (isset($_GET['delete'])) {
+    $eventID = $_GET['delete'];
+    
+    // Start transaction for atomic operations
+    $conn->begin_transaction();
+    
+    try {
+        // 1. Get event and QR code details, and ApprovalLetter
+        $getDetailsQuery = "SELECT e.QRCodeID, q.Image_URL, e.ApprovalLetter
+                           FROM event e 
+                           LEFT JOIN qrcode q ON e.QRCodeID = q.QRCodeID 
+                           WHERE e.EventID = ? AND e.StaffID = ?";
+        $stmt = $conn->prepare($getDetailsQuery);
+        $stmt->bind_param("ss", $eventID, $staff_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            throw new Exception("Event not found or you don't have permission to delete it.");
+        }
+        
+        $eventData = $result->fetch_assoc();
+        $qrCodeID = $eventData['QRCodeID'];
+        $qrImagePath = $eventData['Image_URL'];
+        $approvalLetter = $eventData['ApprovalLetter'];
+        
+        // 2. Delete the event
+        $deleteEventQuery = "DELETE FROM event WHERE EventID = ? AND StaffID = ?";
+        $stmt = $conn->prepare($deleteEventQuery);
+        $stmt->bind_param("ss", $eventID, $staff_id);
+        $stmt->execute();
+        
+        // 3. If exists, delete the QR code record and file
+        if ($qrCodeID && $qrImagePath) {
+            // Delete QR code record
+            $deleteQRQuery = "DELETE FROM qrcode WHERE QRCodeID = ?";
+            $stmt = $conn->prepare($deleteQRQuery);
+            $stmt->bind_param("s", $qrCodeID);
+            $stmt->execute();
+            
+            // Delete physical QR file with safety checks
+            $baseQRDir = realpath('uploads/qrcodes/') . DIRECTORY_SEPARATOR;
+            $fullQRPath = realpath($qrImagePath);
+            
+            if ($fullQRPath && strpos($fullQRPath, $baseQRDir) === 0 && is_file($fullQRPath)) {
+                if (!unlink($fullQRPath)) {
+                    throw new Exception("Failed to delete QR code file.");
+                }
+            }
+        }
+
+        // 4. If exists, delete the Approval Letter file
+        if ($approvalLetter) {
+            // Only keep the filename (in case DB has path)
+            $approvalLetterFile = basename($approvalLetter);
+            $baseLetterDir = realpath('uploads/') . DIRECTORY_SEPARATOR;
+            $approvalLetterPath = realpath('uploads/' . $approvalLetterFile);
+
+            if ($approvalLetterPath && strpos($approvalLetterPath, $baseLetterDir) === 0 && is_file($approvalLetterPath)) {
+                if (!unlink($approvalLetterPath)) {
+                    throw new Exception("Failed to delete Approval Letter file.");
+                }
+            }
+        }
+        
+        // Commit if all operations succeeded
+        $conn->commit();
+        $successMessage = "Event deleted successfully!";
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        $errorMessage = "Error: " . $e->getMessage();
+    } finally {
+        if (isset($stmt)) {
+            $stmt->close();
+        }
+    }
+}
+
+// Fetch all events for this advisor
+$eventsQuery = "SELECT * FROM event WHERE StaffID = ? ORDER BY EventDateandTime DESC";
+$stmt = $conn->prepare($eventsQuery);
+$stmt->bind_param("s", $staff_id);
+$stmt->execute();
+$eventsResult = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -193,7 +281,7 @@ $staff = $result->fetch_assoc();
             background-color: rgba(46, 204, 113, 0.3);
         }
         
-         .maincontent {
+        .maincontent {
             margin-left: 240px;
             margin-top: 100px;
             padding: 40px;
@@ -251,29 +339,6 @@ $staff = $result->fetch_assoc();
             background-color: #f5f5f5;
         }
 
-        .statusbadge {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        }
-
-        .approved {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .pending {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-
-        .rejected {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
         .actionbutton {
             padding: 6px 12px;
             border: none;
@@ -282,29 +347,46 @@ $staff = $result->fetch_assoc();
             font-size: 0.85rem;
             font-weight: 500;
             transition: background-color 0.2s;
+            margin-right: 5px;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .update {
-        background-color: #ffc107;
-        color: #212529;
+            background-color: #ffc107;
+            color: #212529;
         }
         
-
         .delete {
             background-color: #dc3545;
             color: white;
         }
         
-
         .view {
             background-color: #0d6efd;
             color: white;
-            text-decoration: none;
         }
-        
 
-        .footer
-        {
+        .message {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .footer {
             background-color: #1f2d3d;
             color: white;
         }
@@ -323,19 +405,19 @@ $staff = $result->fetch_assoc();
             </div>
         </div>
         <div class="header-right">
-        <a href="EventAdvisorProfile.php" class="profilebutton">
-    <i class="fas fa-user-circle"></i> My Profile
-</a>
+            <a href="EventAdvisorProfile.php" class="profilebutton">
+                <i class="fas fa-user-circle"></i> My Profile
+            </a>
             <a href="logout.php" class="logoutbutton" onclick="return confirm('Are you sure you want to log out?');">
-  <i class="fas fa-sign-out-alt"></i> Logout
-</a>
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
         </div>
     </header>
 
     <nav class="sidebar" id="sidebar">
         <h2 class="sidebartitle">Event Advisor</h2>
         <ul class="menuitems">
-        <li>
+            <li>
                 <a href="EventAdvisorDashboard.php" class="menuitem">
                     <span>Dashboard</span>
                 </a>
@@ -371,7 +453,12 @@ $staff = $result->fetch_assoc();
     <div class="maincontent" id="maincontent">
         <div class="content">
             <h1>Event</h1>
-            
+            <?php if (isset($successMessage)): ?>
+                <div class="message success"><?php echo $successMessage; ?></div>
+            <?php endif; ?>
+            <?php if (isset($errorMessage)): ?>
+                <div class="message error"><?php echo $errorMessage; ?></div>
+            <?php endif; ?>
         </div>
 
         <div class="seccontent">
@@ -380,28 +467,47 @@ $staff = $result->fetch_assoc();
                     <tr>
                         <th>Title</th>
                         <th>Venue</th>
+                        <th>Date & Time</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="event-row">
-                        <td>Bengkel WebEng</td>
-                        <td>Astaka, FK</td>
-                        <td><span class="statusbadge approved">Approved</span></td>
-                        <td>
-                            <a class="actionbutton update">Update</a>
-                            <a class="actionbutton delete">Delete</a>
-                            <a href="ViewEvent.php" class="actionbutton view">View</a>
-                        </td>
-                    </tr>
+                    <?php if ($eventsResult->num_rows > 0): ?>
+                        <?php while ($event = $eventsResult->fetch_assoc()): ?>
+                            <tr class="event-row">
+                                <td><?php echo htmlspecialchars($event['EventTitle']); ?></td>
+                                <td><?php echo htmlspecialchars($event['EventVenue']); ?></td>
+                                <td><?php echo date('j F Y, g:i A', strtotime($event['EventDateandTime'])); ?></td>
+                                <td>
+                                    <span>
+                                        <?php echo $event['EventStatus']; ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="UpdateEvent.php?id=<?php echo $event['EventID']; ?>" class="actionbutton update">
+                                        <i class="fas fa-edit"></i> Update
+                                    </a>
+                                    <a href="Event.php?delete=<?php echo $event['EventID']; ?>" 
+                                       class="actionbutton delete" 
+                                       onclick="return confirm('Are you sure you want to delete this event?');">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                    <a href="ViewEvent.php?id=<?php echo $event['EventID']; ?>" class="actionbutton view">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">No events found</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
-
-
-    
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -410,12 +516,9 @@ $staff = $result->fetch_assoc();
             const mainContent = document.getElementById('maincontent');
             
             toggleButton.addEventListener('click', function() {
-
                 sidebar.classList.toggle('collapsed');
-
                 mainContent.classList.toggle('expanded');
                 
-
                 const icon = toggleButton.querySelector('i');
                 if (sidebar.classList.contains('collapsed')) {
                     icon.classList.remove('fa-times');
@@ -431,9 +534,9 @@ $staff = $result->fetch_assoc();
     </script>
 
     <div class="footer">
-            <footer>
-                <center><p>&copy; 2025 MyPetakom</p></center>
-            </footer>
-        </div>
+        <footer>
+            <center><p>&copy; 2025 MyPetakom</p></center>
+        </footer>
+    </div>
 </body>
 </html>
