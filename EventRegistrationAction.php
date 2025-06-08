@@ -409,7 +409,6 @@ $staff = $result->fetch_assoc();
                     echo "<div class='message success'>Event registered successfully!<br><br>";
                     echo "<strong>Event ID:</strong> $eventID<br>";
                     echo "<strong>Status:</strong> $eventStatus<br>";
-                    echo "<strong>Level:</strong> $eventLevel<br>";
                     echo "</div>";
                 } else {
                     echo "<div class='message error'>Registration failed: " . mysqli_stmt_error($stmt) . "</div>";
